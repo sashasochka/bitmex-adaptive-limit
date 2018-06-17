@@ -1,0 +1,31 @@
+{
+  "name": "bitmex-adaptive-limit",
+  "version": "0.1.0",
+  "description": "A library that manages adaptive limit orders on Bitmex.",
+  "main": "index.js",
+  "repository": "https://github.com/sochka/bitmex-adaptive-limit.git",
+  "engines": {
+    "node": ">=8.11.3"
+  },
+  "scripts": {
+    "start": "node index",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "bitmex",
+    "bitcoin",
+    "order",
+    "limit",
+    "websocket",
+    "api"
+  ],
+  "author": "Oleksandr Sochka <sasha.sochka@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "bitmex-realtime-api": "^0.3.0",
+    "crypto": "^1.0.1",
+    "lodash": "^4.17.10",
+    "swagger-client": "^2.1.8",
+    "url": "^0.11.0"
+  }
+}
