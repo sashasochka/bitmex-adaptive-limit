@@ -5,7 +5,7 @@ const assert = require('assert');
 const BitMEXAPIKeyAuthorization = require('./lib/BitMEXAPIKeyAuthorization');
 
 // Globals
-const testnet = true;
+const testnet = process.env.BITMEX_TESTNET === "true";
 const websitePrefix = testnet ? 'testnet' : 'www';
 const symbol = process.env.BITMEX_CONTRACT || 'XBTUSD';
 
