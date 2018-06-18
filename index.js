@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // Modules
 const SwaggerClient = require('swagger-client');
 const assert = require('assert');
