@@ -1,6 +1,6 @@
 {
   "name": "bitmex-adaptive-limit",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A library that manages adaptive limit orders on Bitmex.",
   "main": "node ./index.js",
   "repository": "https://github.com/sochka/bitmex-adaptive-limit.git",
