@@ -41,7 +41,7 @@ const firstPrice = new Promise(resolve => {
     const {bidPrice, askPrice} = data[data.length - 1];
 
     if (side == "Buy") lastPrice = Math.min(bidPrice + 0.5, askPrice - 0.5);
-    else lastPrice = Math.min(bidPrice + 0.5, askPrice - 0.5);
+    else lastPrice = Math.max(bidPrice + 0.5, askPrice - 0.5);
 
     if (isFirstPrice) {
       resolve(lastPrice);
