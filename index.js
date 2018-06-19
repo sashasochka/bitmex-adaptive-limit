@@ -1,8 +1,11 @@
 #!/usr/bin/env node
+'use strict';
+
 // Modules
 const SwaggerClient = require('swagger-client');
 const assert = require('assert');
 const BitMEXAPIKeyAuthorization = require('./lib/BitMEXAPIKeyAuthorization');
+const BitMEXWSClient = require('bitmex-realtime-api');
 
 // Globals
 const testnet = process.env.BITMEX_TESTNET === "true";
@@ -19,50 +22,84 @@ const orderQty = parseInt(process.argv[3], 10);
 assert(side == 'Buy' || side == 'Sell');
 assert(orderQty != NaN);
 
-// Client
-new SwaggerClient({
+// 1s delayer/waiter to avoid api request limit.
+let needToWait = false;
+let waitPeriodTimeout;
+const requestWaitPeriod = () => {
+  needToWait = true;
+  if (waitPeriodTimeout) clearTimeout(waitPeriodTimeout);
+  waitPeriodTimeout = setTimeout(() => {
+    needToWait = false;
+    amendPrice();
+  }, 1000)
+};
+
+let lastPrice;
+const firstPrice = new Promise(resolve => {
+  let isFirstPrice = true;
+  new BitMEXWSClient({testnet}).addStream(symbol, 'quote', data => {
+    const {bidPrice, askPrice} = data[data.length - 1];
+
+    if (side == "Buy") lastPrice = Math.min(bidPrice + 0.5, askPrice - 0.5);
+    else lastPrice = Math.min(bidPrice + 0.5, askPrice - 0.5);
+
+    if (isFirstPrice) {
+      resolve(lastPrice);
+      isFirstPrice = false;
+    }
+    else {
+      amendPrice();
+    }
+  });
+});
+
+// Create initial order.
+let orderID;
+let currentOrderPrice;
+
+const clientPromise = new SwaggerClient({
   url: `https://${websitePrefix}.bitmex.com/api/explorer/swagger.json`,
   usePromise: true
-})
-.then(async client => {
+});
+clientPromise.then(async client => {
   client.clientAuthorizations.add('apiKey', new BitMEXAPIKeyAuthorization(process.env.BITMEX_API_KEY_ID, process.env.BITMEX_API_KEY_SECRET));
 
-  const getQuote = quote => side == "Buy" ? quote.obj[0].bidPrice : quote.obj[0].askPrice;
-
-  const price = getQuote(await client.Quote.Quote_get({symbol, reverse: true, count: 1}));
-  console.log(`Creating order with price: ${price}`);
-  const orderID = (await client.Order.Order_new({symbol, price, orderQty, side, execInsts: 'ParticipateDoNotInitiate'})).obj.orderID;
-
-  const launchTimer = () => setTimeout(amendPrice, 1000);
-
-  let lastPrice = price;
-  const amendPrice = async () => {
-    const price = getQuote(await client.Quote.Quote_get({symbol, reverse: true, count: 1}));
-    if (price != lastPrice)
-    {
-      lastPrice = price;
-      await client.Order.Order_amend({orderID, price: price})
-        .then(() => {
-          console.log(`Order amended with new price: ${price}`);
-          launchTimer();
-        })
-        .catch(e => {
-          if (e.obj.error.message == "Invalid ordStatus")
-          {
-            console.log('Order executed successfully.');
-          }
-          else
-          {
-            console.error(e.error.message);
-          }
-        });
-    }
-    else
-    {
-      launchTimer();
-    }
-  };
-
-  launchTimer();
+  currentOrderPrice = await firstPrice;
+  console.log(`Creating order with price: ${currentOrderPrice}`);
+  orderID = (await client.Order.Order_new({symbol, price: currentOrderPrice, orderQty, side, execInsts: 'ParticipateDoNotInitiate'})).obj.orderID;
 })
-.catch(e => console.error(`Unable to connect: ${e}`));
+.catch(e =>
+   console.error(`Unable to connect: ${e.errObj.message}`)
+);
+
+const amendPrice = async () => {
+  if (needToWait) return;
+  needToWait = true;
+
+  if (lastPrice != currentOrderPrice)
+  {
+    currentOrderPrice = lastPrice;
+    const client = await clientPromise;
+    await client.Order.Order_amend({orderID, price: lastPrice})
+      .then(() => {
+        console.log(`Order amended with new price: ${currentOrderPrice}`);
+        requestWaitPeriod();
+      })
+      .catch(e => {
+        if (e.obj.error.message == "Invalid ordStatus")
+        {
+          console.log('Order executed successfully.');
+          process.exit(0);
+        }
+        else
+        {
+          console.error(e.message);
+          process.exit(1);
+        }
+      });
+  }
+  else
+  {
+    requestWaitPeriod();
+  }
+};

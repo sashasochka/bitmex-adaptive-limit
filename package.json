@@ -25,6 +25,7 @@
   "author": "Oleksandr Sochka <sasha.sochka@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "bitmex-realtime-api": "^0.3.0",
     "lodash": "^4.17.10",
     "swagger-client": "^2.1.8",
     "url": "^0.11.0"
