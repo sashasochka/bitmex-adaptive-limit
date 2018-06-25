@@ -35,9 +35,16 @@ const requestWaitPeriod = () => {
 };
 
 let lastPrice;
-const firstPrice = new Promise(resolve => {
+const firstPrice = new Promise((resolve, reject) => {
   let isFirstPrice = true;
   new BitMEXWSClient({testnet}).addStream(symbol, 'quote', data => {
+    if (!data || data.length == 0)
+    {
+      console.log('Websocket returning undefined data');
+      reject();
+    }
+    assert(data[data.length - 1], `WS data length is ${data.length}`);
+    assert(data[data.length - 1].bidPrice, 'WS data has no bidPrice');
     const {bidPrice, askPrice} = data[data.length - 1];
 
     if (side == "Buy") lastPrice = Math.min(bidPrice + 0.5, askPrice - 0.5);
@@ -69,7 +76,7 @@ clientPromise.then(async client => {
   orderID = (await client.Order.Order_new({symbol, price: currentOrderPrice, orderQty, side, execInsts: 'ParticipateDoNotInitiate'})).obj.orderID;
 })
 .catch(e =>
-   console.error(`Unable to connect: ${e.errObj.message}`)
+   console.error(`Error (unable to connect?): ${e.errObj.message}`)
 );
 
 const amendPrice = async () => {
