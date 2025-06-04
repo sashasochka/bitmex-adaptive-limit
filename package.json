@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node index",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test/BitMEXAPIKeyAuthorization.test.js"
   },
   "bin": {
     "bitmex": "index.js"
