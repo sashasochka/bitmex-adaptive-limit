@@ -1,6 +1,6 @@
 # bitmex-adaptive-limit
 ## Purpose
-Allows making a market maker limit order that would automatically up your bids or decrease your asks to guarantee fast rebateable orders.
+Allows making a market maker limit order that would automatically up your bids or decrease your asks to guarantee fast rebatable orders.
 ## Installation & setup
 1. `npm install -g bitmex-adaptive-limit`
 2. Setup `BITMEX_API_KEY_ID` and `BITMEX_API_KEY_SECRET` env variables to bitmex api key and secret.
