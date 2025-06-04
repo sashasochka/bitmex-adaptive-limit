@@ -20,7 +20,7 @@ const side = capitalizeFirstLetter(process.argv[2]);
 const orderQty = parseInt(process.argv[3], 10);
 
 assert(side == 'Buy' || side == 'Sell');
-assert(orderQty != NaN);
+assert(!Number.isNaN(orderQty));
 
 // 1s delayer/waiter to avoid api request limit.
 let needToWait = false;
